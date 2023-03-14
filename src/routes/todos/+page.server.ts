@@ -7,7 +7,11 @@ export const load: PageServerLoad = async ({ locals: { supabase, getSession } })
 	// 	throw redirect(303, '/');
 	// }
 
-	const { data: todos } = await supabase.from('todos').select('*');
+	const { data: todos } = await supabase
+		.from('todos')
+		.select('*')
+		.order('id', { ascending: false });
+
 	return { todos };
 };
 
@@ -30,7 +34,7 @@ export const actions: Actions = {
 	updateDone: async ({ request, locals: { supabase, getSession } }) => {
 		const data = Object.fromEntries(await request.formData());
 		const { id, done } = data;
-		console.log('updateDone', id, done);
+
 		if (!id) return fail(400, { message: 'Missing id' });
 		if (!done) return fail(400, { message: 'Missing done' });
 

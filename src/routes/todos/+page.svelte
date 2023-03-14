@@ -32,8 +32,7 @@
 		return `<input type="hidden" name="id" value="${id || null}" />`;
 	}
 
-	async function update() {
-		const id = updateForm.id.value;
+	async function update(id: string) {
 		const done = updateForm.done.value;
 		const text = updateForm.text.value;
 		if (!id || !done) return;
@@ -55,7 +54,7 @@
 		applyAction(data);
 	}
 
-	function setEdit(id) {
+	function setEdit(id: string) {
 		if (editId !== id) {
 			editId = id;
 			edit = true;
@@ -74,13 +73,12 @@
 			{#each todos as todo}
 				<div class="todo__item">
 					<form class="todo__update" bind:this={updateForm}>
-						{@html setId(todo.id)}
 						<input
 							type="checkbox"
 							name="done"
 							value={todo.done}
 							bind:checked={todo.done}
-							on:change={update}
+							on:change={() => update(todo.id)}
 						/>
 						<input
 							type="text"
@@ -89,11 +87,18 @@
 							name="text"
 							value={todo.text}
 							disabled={edit && editId === todo.id ? false : true}
-							on:change={update}
+							on:change={() => update(todo.id)}
+							on:keypress={(e) => {
+								if (e.key === 'Enter' || e.key === 'Tab') {
+									edit = false;
+									editId = '';
+									update(todo.id);
+								}
+							}}
 							on:blur={() => {
 								edit = false;
 								editId = '';
-								update();
+								update(todo.id);
 							}}
 						/>
 					</form>

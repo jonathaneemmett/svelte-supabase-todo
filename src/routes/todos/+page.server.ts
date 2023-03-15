@@ -52,6 +52,6 @@ export const actions: Actions = {
 		const { error } = await supabase.from('todos').delete().match({ id });
 		if (error) return fail(500, { message: error, id });
 
-		return { status: 200, body: { message: 'Todo deleted' } };
+		return { type: 'success', status: 200, body: { message: 'Todo deleted' } };
 	}
 };

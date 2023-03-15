@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { createEventDispatcher } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
 	import { enhance, applyAction } from '$app/forms';
 
@@ -17,8 +18,10 @@
 	let edit: boolean = false;
 	let editId: string = '';
 
-	let text: string = todo.text || '';
-	let done: boolean = todo.done || false;
+	let text: string = '';
+	let done: boolean = false;
+
+	const dispatch = createEventDispatcher();
 
 	function setId(id: string) {
 		return `<input type="hidden" name="id" value="${id || null}" />`;
@@ -27,24 +30,7 @@
 	async function update(id: string) {
 		if (!id) return;
 
-		const res = await fetch('/api/todo/update', {
-			method: 'POST',
-			body: JSON.stringify({
-				id,
-				text,
-				done
-			})
-		});
-
-		const data = await res.json();
-
-		if (data.type === 'success') {
-			invalidateAll();
-		} else if (data.type === 'error') {
-			console.error(data);
-		}
-
-		applyAction(data);
+		dispatch('edit', { id, text, done });
 	}
 
 	function setEdit(id: string) {
@@ -92,7 +78,7 @@
 			}}
 		/>
 	{:else}
-		<span class="todo__text" class:todo__item__done={todo.done}>{todo.text}</span>
+		<span class="todo__text" class:todo__item__done={todo.done}>{text || todo.text}</span>
 	{/if}
 	<button on:click={() => setEdit(todo.id)} disabled={todo.done}>
 		<Edit isEdit={edit && editId === todo.id} disabled={todo.done} />
@@ -115,12 +101,6 @@
 		font-size: 1.25rem;
 		width: 100%;
 		gap: 0.5rem;
-	}
-
-	.todo__update {
-		display: flex;
-		flex-direction: row;
-		width: 100%;
 	}
 
 	.todo__delete {

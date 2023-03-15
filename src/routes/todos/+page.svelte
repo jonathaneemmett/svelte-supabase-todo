@@ -1,23 +1,48 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { applyAction } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
+
 	import type { ActionData, PageData } from './$types';
 
 	// Components
 	import TodoItem from '$lib/components/Todo/TodoItem.svelte';
+	import AddItem from '$lib/components/Todo/AddItem.svelte';
 
 	export let data: PageData;
 	export let form: ActionData;
 
-	let text: string = '';
+	async function update(e: CustomEvent) {
+		const { id, text, done } = e.detail;
+
+		if (!id || !text || done === undefined) return;
+
+		const res = await fetch('/api/todo/update', {
+			method: 'POST',
+			body: JSON.stringify({
+				id,
+				text,
+				done
+			})
+		});
+
+		const data = await res.json();
+
+		if (data.type === 'success') {
+			invalidateAll();
+		} else if (data.type === 'error') {
+			console.error(data);
+		}
+
+		applyAction(data);
+	}
 </script>
 
 <section class="todo">
 	<div class="todo__container">
 		<h1>Todos</h1>
-
 		<div class="todo__list">
 			{#each data.todos as todo}
-				<TodoItem {todo} />
+				<TodoItem {todo} on:edit={update} />
 			{:else}
 				<div class="todo__item">
 					<span>No todos</span>
@@ -25,16 +50,10 @@
 			{/each}
 		</div>
 
-		<form action="?/addTodo" method="POST" use:enhance>
-			<input
-				type="text"
-				name="text"
-				class="todo__add-control"
-				value={text}
-				placeholder="Add new todo"
-			/>
-			<button type="submit">Add</button>
-		</form>
+		<AddItem />
+		<div class="todo__code">
+			<a href="https://github.com/jonathaneemmett/svelte-supabase-todo">See the code</a>
+		</div>
 	</div>
 </section>
 
@@ -44,6 +63,7 @@
 		flex-direction: column;
 		width: 100%;
 		margin-block-start: 4rem;
+		padding-inline: 1rem;
 	}
 
 	.todo__container {
@@ -80,52 +100,9 @@
 		gap: 0.5rem;
 	}
 
-	.todo__add-control {
-		width: 100%;
-		padding-block: 1rem;
-		background: none;
-		outline: none;
-		border: none;
-		border-bottom: 1px solid #ccc;
-		font-size: 1.25rem;
-		color: var(--primary-text-color);
-	}
-	.todo__list button {
-		width: 1.5rem;
-		height: 1.5rem;
-		padding: 0;
-		background: none;
-		outline: none;
-		border: none;
-		cursor: pointer;
-	}
-
-	.todo__text {
-		flex: 1;
-	}
-
-	form {
+	.todo__code {
 		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-		width: 100%;
-		margin-inline: auto;
-	}
-
-	button {
-		width: 100%;
-		padding-block: 1rem;
-		font-size: 1.25rem;
-		background: none;
-		outline: none;
-		border: 1px solid #ccc;
-		cursor: pointer;
-		color: #ccc;
-		font-weight: 500;
-	}
-
-	button:hover {
-		color: #000;
-		border-color: #000;
+		justify-content: flex-end;
+		margin-block-start: 1rem;
 	}
 </style>
